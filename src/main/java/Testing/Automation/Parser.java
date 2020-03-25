@@ -22,7 +22,7 @@ public class Parser {
 	private Map<Integer, String> conditions = null;
 	private int lastConditionIndex;
 	private String tempRunValue = "";
-	
+
 	public void Parse(XWPFDocument xdoc) throws IOException
 	{
 		//Preparing
@@ -31,28 +31,28 @@ public class Parser {
 		this.lastNode = this.root;
 		this.conditions = new HashMap<Integer,String>();
 		this.lastConditionIndex = 1;
-		
+
 		for (XWPFParagraph p : xdoc.getParagraphs()) {
-	        List<XWPFRun> runs = p.getRuns();
-	        if (runs != null) {
-	            for (XWPFRun r : runs) {
-	                if(this.getValue("ConditionColor").equalsIgnoreCase(r.getColor()))
-	                {
-	                	if(r.getText(0).trim().isEmpty())
-	                	{
-	                		continue;
-	                	}
-	                	
-	                	this.reconstructCondition(r.getText(0).trim());
-	                }
-	            }
-	        }
-	    }
-		
+			List<XWPFRun> runs = p.getRuns();
+			if (runs != null) {
+				for (XWPFRun r : runs) {
+					if(this.getValue("ConditionColor").equalsIgnoreCase(r.getColor()))
+					{
+						if(r.getText(0).trim().isEmpty())
+						{
+							continue;
+						}
+
+						this.reconstructCondition(r.getText(0).trim());
+					}
+				}
+			}
+		}
+
 		this.printTree(this.root, " ");
 //		this.printConditions();
 	}
-	
+
 	private void reconstructCondition(String condition)
 	{
 		if(condition.equalsIgnoreCase("ELSE") || condition.equalsIgnoreCase("ENDIF") || condition.equalsIgnoreCase("END IF"))
@@ -60,7 +60,7 @@ public class Parser {
 			this.updateConditionList(condition);
 			return;
 		}
-		
+
 		if(condition.toLowerCase().contains("then"))
 		{
 			this.tempRunValue += " ";
@@ -73,9 +73,9 @@ public class Parser {
 			this.tempRunValue += " ";
 			this.tempRunValue += condition;
 		}
-		
+
 	}
-	
+
 	private void updateConditionList(String condition)
 	{
 		if(condition.equalsIgnoreCase("ELSE"))
@@ -83,18 +83,18 @@ public class Parser {
 			this.lastNode = this.lastNode.getCounterPart();
 			return;
 		}
-		
+
 		if(condition.equalsIgnoreCase("END IF") || condition.equalsIgnoreCase("ENDIF"))
 		{
 			this.lastNode = this.lastNode.getParent();
 			return;
 		}
-		
+
 		this.conditions.put(this.lastConditionIndex, condition);
 		updateTree();
 		this.lastConditionIndex++;
 	}
-	
+
 	private void updateTree()
 	{
 		String tiv = "T" + Integer.toString(this.lastConditionIndex);
@@ -105,36 +105,36 @@ public class Parser {
 		F.setCounterPart(T);
 		this.lastNode = T;
 	}
-	
+
 	private void updateTestCases(String condition)
 	{
 		System.out.println(condition);
 	}
-	
+
 	private void loadProperties() throws IOException
 	{
-		 FileReader reader=new FileReader("values.properties");  
-	      
-		 Properties p=new Properties();  
-		 p.load(reader);
-		 
-		 this.properties = p;
+		FileReader reader=new FileReader("values.properties");  
+
+		Properties p=new Properties();  
+		p.load(reader);
+
+		this.properties = p;
 	}
-	
+
 	private String getValue(String key)
 	{ 
 		return this.properties.getProperty(key);
 	}
-	
+
 	//Debugging Part
 	private <T> void printTree(Node<T> node, String appender) {
-	     System.out.println(appender + node.getData());
-	     node.getChildren().forEach(each ->  printTree(each, appender + appender));
+		System.out.println(appender + node.getData());
+		node.getChildren().forEach(each ->  printTree(each, appender + appender));
 	}
-	
+
 	private void printConditions()
 	{
 		System.out.println(this.conditions.toString());
 	}
-	
+
 }

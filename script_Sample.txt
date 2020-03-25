@@ -1,0 +1,41 @@
+function  getText1()
+{
+	if(IndexOf(getPolicyOwnerTitleFirstNameSurNameAsStringForStmt(),"~") > 0)
+	{
+		WriteTextLine("Policyholders");
+	}
+		else{
+			WriteTextLine("Policyholder");
+		    }
+}
+-----------------------------------------------------------------------------
+function getPolicyOwnerTitleFirstNameSurNameAsStringForStmt() {
+
+	var laNames = "";
+	var counter = 0;
+	var size = 0;
+	
+	for (var i=0; i<letter.processData.length; i++) {
+		size = size + letter.processData[i].policyOwner.length;
+	}
+	for (var i=0; i<letter.processData.length; i++) {
+		for (var j=0; j<letter.processData[i].policyOwner.length; j++) {
+		  			
+			laNames = getSeparatorNew(counter, size, laNames);
+			if(letter.processData[i].policyOwner[j].name.surName == "Unknown" || letter.processData[i].policyOwner[j].name.surName == "NA")
+			{
+				laNames = laNames + letter.processData[i].policyOwner[j].name.firstName;
+			}
+			else{
+								
+				laNames = laNames + 
+						  letter.processData[i].policyOwner[j].name.firstName + " ";
+				if(letter.processData[i].policyOwner[j].name.surName != "Unknown" || letter.processData[i].policyOwner[j].name.surName != "NA"){
+					laNames = laNames + letter.processData[i].policyOwner[j].name.surName;
+				}
+			}
+			counter++;
+	  }
+	}
+	return(laNames);
+}
