@@ -21,6 +21,7 @@ public class Parser {
 	private Node<String> lastNode = null;
 	private Map<Integer, String> conditions = null;
 	private int lastConditionIndex;
+	private String tempRunValue = "";
 	
 	public void Parse(XWPFDocument xdoc) throws IOException
 	{
@@ -42,14 +43,37 @@ public class Parser {
 	                		continue;
 	                	}
 	                	
-	                	this.updateConditionList(r.getText(0).trim());
+	                	this.reconstructCondition(r.getText(0).trim());
 	                }
 	            }
 	        }
 	    }
 		
-		//this.printTree(this.root, " ");
-		this.printConditions();
+		this.printTree(this.root, " ");
+//		this.printConditions();
+	}
+	
+	private void reconstructCondition(String condition)
+	{
+		if(condition.equalsIgnoreCase("ELSE") || condition.equalsIgnoreCase("ENDIF") || condition.equalsIgnoreCase("END IF"))
+		{
+			this.updateConditionList(condition);
+			return;
+		}
+		
+		if(condition.toLowerCase().contains("then"))
+		{
+			this.tempRunValue += " ";
+			this.tempRunValue += condition;
+			this.updateConditionList(this.tempRunValue);
+			this.tempRunValue = "";
+		}
+		else
+		{
+			this.tempRunValue += " ";
+			this.tempRunValue += condition;
+		}
+		
 	}
 	
 	private void updateConditionList(String condition)
