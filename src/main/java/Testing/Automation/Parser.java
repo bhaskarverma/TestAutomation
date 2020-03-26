@@ -15,13 +15,14 @@ import org.apache.poi.xwpf.usermodel.XWPFRun;
 public class Parser {
 
 	private Properties properties = null;
-	private Map<String, String> testCases = null;
+	private Map<String, List<String>> testCases = null;
 	private String lastStep = null;
 	private Node<String> root = null;
 	private Node<String> lastNode = null;
 	private Map<Integer, String> conditions = null;
 	private int lastConditionIndex;
 	private String tempRunValue = "";
+	private MappingInterface map = null;
 
 	public void Parse(XWPFDocument xdoc) throws IOException
 	{
@@ -31,6 +32,8 @@ public class Parser {
 		this.lastNode = this.root;
 		this.conditions = new HashMap<Integer,String>();
 		this.lastConditionIndex = 1;
+		this.map = new MappingInterface();
+		this.testCases = new HashMap<String, List<String>>();
 
 		for (XWPFParagraph p : xdoc.getParagraphs()) {
 			List<XWPFRun> runs = p.getRuns();
@@ -48,7 +51,11 @@ public class Parser {
 				}
 			}
 		}
-
+		
+		//Creating Test Cases
+		this.createTestCases(root);
+		
+		//Debugging
 		this.printTree(this.root, " ");
 //		this.printConditions();
 	}
@@ -101,14 +108,31 @@ public class Parser {
 		String fiv = "F" + Integer.toString(this.lastConditionIndex);
 		Node<String> T = this.lastNode.addChild(new Node<String>(tiv));
 		Node<String> F = this.lastNode.addChild(new Node<String>(fiv));
+		
 		T.setCounterPart(F);
+		T.setCondition(this.conditions.get(this.lastConditionIndex));
+		T.setXPath(this.map.getXPath(this.conditions.get(this.lastConditionIndex)));
+		T.setNodeEvaluation("true");
+		
 		F.setCounterPart(T);
+		F.setCondition(this.conditions.get(this.lastConditionIndex));
+		F.setXPath(this.map.getXPath(this.conditions.get(this.lastConditionIndex)));
+		F.setNodeEvaluation("false");
+		
 		this.lastNode = T;
 	}
 
-	private void updateTestCases(String condition)
+	private <T> void createTestCases(Node<T> node)
 	{
-		System.out.println(condition);
+		if(!node.getData().equals("root"))
+		{
+			List<String> values = this.map.getValues(node.getCondition().toString(), node.getNodeEvaluation().toString());
+			
+		}
+		else
+		{
+			node.getChildren().forEach(each ->  createTestCases(each));
+		}
 	}
 
 	private void loadProperties() throws IOException
@@ -128,7 +152,7 @@ public class Parser {
 
 	//Debugging Part
 	private <T> void printTree(Node<T> node, String appender) {
-		System.out.println(appender + node.getData());
+		System.out.println(appender + node.getCondition());
 		node.getChildren().forEach(each ->  printTree(each, appender + appender));
 	}
 

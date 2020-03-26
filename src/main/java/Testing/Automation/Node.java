@@ -14,6 +14,8 @@ public class Node<T> {
 	private Node<T> counterPart = null;
 
 	private T condition = null;
+	
+	private T evaluation = null;
 
 	private T xpath = null;
 
@@ -44,6 +46,16 @@ public class Node<T> {
 	public Node<T> getCounterPart()
 	{
 		return this.counterPart;
+	}
+	
+	public void setNodeEvaluation(T ne)
+	{
+		this.evaluation = ne;
+	}
+
+	public T getNodeEvaluation()
+	{
+		return this.evaluation;
 	}
 
 	public void setCondition(T cond)
