@@ -15,6 +15,8 @@ public class Node<T> {
 
 	private T condition = null;
 	
+	public Boolean tc_flag = false;
+	
 	private T evaluation = null;
 
 	private T xpath = null;

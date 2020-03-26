@@ -15,7 +15,7 @@ import org.apache.poi.xwpf.usermodel.XWPFRun;
 public class Parser {
 
 	private Properties properties = null;
-	private Map<String, List<String>> testCases = null;
+	private Map<String, List<List<String>>> testCases = null;
 	private String lastStep = null;
 	private Node<String> root = null;
 	private Node<String> lastNode = null;
@@ -33,7 +33,7 @@ public class Parser {
 		this.conditions = new HashMap<Integer,String>();
 		this.lastConditionIndex = 1;
 		this.map = new MappingInterface();
-		this.testCases = new HashMap<String, List<String>>();
+		this.testCases = new HashMap<String, List<List<String>>>();
 
 		for (XWPFParagraph p : xdoc.getParagraphs()) {
 			List<XWPFRun> runs = p.getRuns();
@@ -56,8 +56,9 @@ public class Parser {
 		this.createTestCases(root);
 		
 		//Debugging
-		this.printTree(this.root, " ");
+//		this.printTree(this.root, " ");
 //		this.printConditions();
+		System.out.println(this.testCases);
 	}
 
 	private void reconstructCondition(String condition)
@@ -128,6 +129,32 @@ public class Parser {
 		{
 			List<String> values = this.map.getValues(node.getCondition().toString(), node.getNodeEvaluation().toString());
 			
+			int cnt = 1;
+			for(String value : values)
+			{
+				
+				List<String> a = new ArrayList();
+				a.add(node.getXPath().toString());
+				a.add(value);
+				a.add(node.getNodeEvaluation().toString());
+				
+				if(this.testCases.containsKey("TC"+cnt))
+				{
+					List<List<String>> tmp = this.testCases.get("TC"+cnt);
+					tmp.add(a);
+					this.testCases.replace("TC"+cnt, tmp);
+				}
+				else
+				{
+					List<List<String>> b = new ArrayList();
+					b.add(a);
+					this.testCases.put("TC"+cnt,b);
+				}
+				
+				cnt++;
+			}
+			
+			node.getChildren().forEach(each ->  createTestCases(each));
 		}
 		else
 		{
@@ -152,7 +179,7 @@ public class Parser {
 
 	//Debugging Part
 	private <T> void printTree(Node<T> node, String appender) {
-		System.out.println(appender + node.getCondition());
+		System.out.println(appender + node.getXPath());
 		node.getChildren().forEach(each ->  printTree(each, appender + appender));
 	}
 
