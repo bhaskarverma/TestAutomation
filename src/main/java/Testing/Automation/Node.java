@@ -17,6 +17,8 @@ public class Node<T> {
 	
 	public Boolean tc_flag = false;
 	
+	private T value = null;
+	
 	private T evaluation = null;
 
 	private T xpath = null;
@@ -48,6 +50,16 @@ public class Node<T> {
 	public Node<T> getCounterPart()
 	{
 		return this.counterPart;
+	}
+	
+	public void setValue(T nv)
+	{
+		this.value = nv;
+	}
+
+	public T getValue()
+	{
+		return this.value;
 	}
 	
 	public void setNodeEvaluation(T ne)

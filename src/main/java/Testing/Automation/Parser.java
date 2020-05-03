@@ -24,6 +24,10 @@ public class Parser {
 	private String tempRunValue = "";
 	private MappingInterface map = null;
 
+	//tree build test for multiple values
+	private String currentEvaluation = "END";
+	private String lastEvaluation = "END";
+	
 	public void Parse(XWPFDocument xdoc) throws IOException
 	{
 		//Preparing
@@ -56,9 +60,9 @@ public class Parser {
 		this.createTestCases(root);
 		
 		//Debugging
-//		this.printTree(this.root, " ");
+		this.printTree(this.root, " ");
 //		this.printConditions();
-		System.out.println(this.testCases);
+//		System.out.println(this.testCases);
 	}
 
 	private void reconstructCondition(String condition)
@@ -83,45 +87,141 @@ public class Parser {
 		}
 
 	}
-
+	
+//	private void updateConditionList(String condition)
+//	{
+//		if(condition.equalsIgnoreCase("ELSE"))
+//		{
+//			this.lastNode = this.lastNode.getCounterPart();
+//			return;
+//		}
+//
+//		if(condition.equalsIgnoreCase("END IF") || condition.equalsIgnoreCase("ENDIF"))
+//		{
+//			this.lastNode = this.lastNode.getParent();
+//			return;
+//		}
+//
+//		this.conditions.put(this.lastConditionIndex, condition);
+//		updateTree();
+//		this.lastConditionIndex++;
+//	}
+	
 	private void updateConditionList(String condition)
 	{
+		this.conditions.put(this.lastConditionIndex, condition);
+		this.lastConditionIndex++;
+		
+		this.lastEvaluation = this.lastNode.getNodeEvaluation();
 		if(condition.equalsIgnoreCase("ELSE"))
 		{
-			this.lastNode = this.lastNode.getCounterPart();
-			return;
+			this.currentEvaluation = "ELSE";
 		}
-
-		if(condition.equalsIgnoreCase("END IF") || condition.equalsIgnoreCase("ENDIF"))
+		else if(condition.equalsIgnoreCase("ENDIF") || condition.equalsIgnoreCase("END IF"))
+		{
+			this.currentEvaluation = "END";
+		}
+		else if(condition.equalsIgnoreCase("ELSEIF") || condition.equalsIgnoreCase("ELSE IF"))
+		{
+			this.currentEvaluation = "ELIF";
+		}
+		else
+		{
+			this.currentEvaluation = "IF";
+		}
+		
+		updateTree(condition);
+	}
+	
+	private void updateTree(String condition)
+	{
+		Node<String> currentNode = null;
+		Node<String> parentNode = null;
+		
+		if(this.currentEvaluation.equalsIgnoreCase("END"))
 		{
 			this.lastNode = this.lastNode.getParent();
 			return;
 		}
-
-		this.conditions.put(this.lastConditionIndex, condition);
-		updateTree();
-		this.lastConditionIndex++;
+		
+		if(this.lastEvaluation == null)
+		{
+			return;
+		}
+		
+		switch(this.lastEvaluation)
+		{
+			case "IF":
+				parentNode = this.lastNode;
+				break;
+			case "ELSE":
+				parentNode = this.lastNode;
+				break;
+			case "ELIF":
+				parentNode = this.lastNode;
+				break;
+			case "END":
+				if(this.lastNode.equals(this.root))
+				{
+					parentNode = this.lastNode;
+				}
+				else {
+					parentNode = this.lastNode.getParent();
+					return;
+				}
+				break;
+			default:
+		}
+		
+		List<String> true_values = this.map.getValues(condition, "true");
+		List<String> false_values = this.map.getValues(condition, "false");
+		String xpath = this.map.getXPath(condition);
+		
+		for(String value : true_values)
+		{
+			currentNode = new Node<String>("");
+			currentNode.setValue(value);
+			currentNode.setCondition(condition);
+			currentNode.setXPath(xpath);
+			currentNode.setNodeEvaluation(this.currentEvaluation);
+			parentNode.addChild(currentNode);
+			this.lastNode = currentNode;
+		}
+		
+		for(String value : false_values)
+		{
+			currentNode = new Node<String>("");
+			currentNode.setValue(value);
+			currentNode.setCondition(condition);
+			currentNode.setXPath(xpath);
+			currentNode.setNodeEvaluation(this.currentEvaluation);
+			parentNode.addChild(currentNode);
+		}
+		
+		
 	}
 
-	private void updateTree()
-	{
-		String tiv = "T" + Integer.toString(this.lastConditionIndex);
-		String fiv = "F" + Integer.toString(this.lastConditionIndex);
-		Node<String> T = this.lastNode.addChild(new Node<String>(tiv));
-		Node<String> F = this.lastNode.addChild(new Node<String>(fiv));
-		
-		T.setCounterPart(F);
-		T.setCondition(this.conditions.get(this.lastConditionIndex));
-		T.setXPath(this.map.getXPath(this.conditions.get(this.lastConditionIndex)));
-		T.setNodeEvaluation("true");
-		
-		F.setCounterPart(T);
-		F.setCondition(this.conditions.get(this.lastConditionIndex));
-		F.setXPath(this.map.getXPath(this.conditions.get(this.lastConditionIndex)));
-		F.setNodeEvaluation("false");
-		
-		this.lastNode = T;
-	}
+//	private void updateTree()
+//	{
+//		
+//		
+//		String tiv = "T" + Integer.toString(this.lastConditionIndex);
+//		String fiv = "F" + Integer.toString(this.lastConditionIndex);
+//		Node<String> T = this.lastNode.addChild(new Node<String>(tiv));
+//		Node<String> F = this.lastNode.addChild(new Node<String>(fiv));
+//		
+//		T.setCounterPart(F);
+//		T.setCondition(this.conditions.get(this.lastConditionIndex));
+//		T.setXPath(this.map.getXPath(this.conditions.get(this.lastConditionIndex)));
+//		T.setNodeEvaluation("true");
+//		
+//		F.setCounterPart(T);
+//		F.setCondition(this.conditions.get(this.lastConditionIndex));
+//		F.setXPath(this.map.getXPath(this.conditions.get(this.lastConditionIndex)));
+//		F.setNodeEvaluation("false");
+//		
+//		this.lastNode = T;
+//	}
 
 	private <T> void createTestCases(Node<T> node)
 	{
@@ -132,7 +232,6 @@ public class Parser {
 			int cnt = 1;
 			for(String value : values)
 			{
-				
 				List<String> a = new ArrayList();
 				a.add(node.getXPath().toString());
 				a.add(value);
@@ -179,7 +278,7 @@ public class Parser {
 
 	//Debugging Part
 	private <T> void printTree(Node<T> node, String appender) {
-		System.out.println(appender + node.getXPath());
+		System.out.println(appender + node.getData());
 		node.getChildren().forEach(each ->  printTree(each, appender + appender));
 	}
 

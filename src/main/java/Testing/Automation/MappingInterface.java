@@ -28,6 +28,8 @@ public class MappingInterface {
 		//Sample Data : True Values
 		List<String> tv = new ArrayList<String>();
 		tv.add("true");
+		tv.add("true1");
+		tv.add("true2");
 		this.cond_true_values.put("IF CONDITION 1 THEN", tv);
 		this.cond_true_values.put("IF CONDITION 2 THEN", tv);
 		this.cond_true_values.put("IF CONDITION 3 THEN", tv);
@@ -46,7 +48,7 @@ public class MappingInterface {
 	
 	public String getXPath(String cond)
 	{
-		return this.cond_xpath.get(cond.strip());
+		return this.cond_xpath.get(cond.trim());
 	}
 	
 	public void loadMapSheet(String path)
@@ -54,15 +56,17 @@ public class MappingInterface {
 		
 	}
 	
+	
+	// cond => Condition & ne => Node Evaluation, True or False
 	public List<String> getValues(String cond, String ne)
 	{
 		if(ne.equals("true"))
 		{
-			return this.cond_true_values.get(cond.strip());
+			return this.cond_true_values.get(cond.trim());
 		}
 		else
 		{
-			return this.cond_false_values.get(cond.strip());
+			return this.cond_false_values.get(cond.trim());
 		}
 	}
 	
