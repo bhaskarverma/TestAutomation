@@ -26,7 +26,7 @@ public class Parser {
 
 	//tree build test for multiple values
 	private String currentEvaluation = "END";
-	private String lastEvaluation = "END";
+	private String lastEvaluation = "START";
 	
 	public void Parse(XWPFDocument xdoc) throws IOException
 	{
@@ -112,7 +112,14 @@ public class Parser {
 		this.conditions.put(this.lastConditionIndex, condition);
 		this.lastConditionIndex++;
 		
-		this.lastEvaluation = this.lastNode.getNodeEvaluation();
+		if(this.lastNode == this.root)
+		{
+			this.lastEvaluation = "START";
+		}
+		else
+		{
+			this.lastEvaluation = this.lastNode.getNodeEvaluation();
+		}
 		if(condition.equalsIgnoreCase("ELSE"))
 		{
 			this.currentEvaluation = "ELSE";
@@ -144,11 +151,6 @@ public class Parser {
 			return;
 		}
 		
-		if(this.lastEvaluation == null)
-		{
-			return;
-		}
-		
 		switch(this.lastEvaluation)
 		{
 			case "IF":
@@ -171,6 +173,7 @@ public class Parser {
 				}
 				break;
 			default:
+					parentNode = this.root;
 		}
 		
 		List<String> true_values = this.map.getValues(condition, "true");
